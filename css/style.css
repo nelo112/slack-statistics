@@ -1,0 +1,10 @@
+#title {
+    padding-left: 0.5em;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 4em;
+    color: #E05038;
+}
+body {
+    background: linear-gradient(to right, #FFFFF0, #F0EAD6);
+    margin: 2em;
+}
