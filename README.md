@@ -2,7 +2,7 @@
 Graphing the use of specific words in your Slack team.		
 Made with JavaScript, Chart.js and the Slack API.
 
-![alt text](http://i.imgur.com/ByfaBkX.png?1 width="100" height="180")
+![alt text](http://i.imgur.com/ByfaBkX.png?1)
 
 ## How to use
 
