@@ -1,9 +1,11 @@
-// token to access the API
-var slackToken = ""; // add token for own use
+// Slack Word Statistics -- Settings
+var slackToken = ""; // add token as string for own use
+var paidPlan = true; // set to true if your team pays for Slack
+var horizontalBar = true; // set to false if you want vertical bars
 
-function data(token, query, index) {
+function data(query, index) {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://slack.com/api/search.messages?token=" + token + "&query=" + query + "&pretty=1", true); // make GET request
+    xhr.open("GET", "https://slack.com/api/search.messages?token=" + slackToken + "&query=" + query + "&pretty=1", true); // make GET request
     xhr.send();
 
     // when state change -> do processRequest
@@ -20,13 +22,30 @@ function data(token, query, index) {
     };
 };
 
-// data(token, label, index);
-// your label is the same as the word you want to track
-data(slackToken, "label1", 0);
-data(slackToken, "label2", 1);
-data(slackToken, "label3", 2);
-data(slackToken, "label4", 3);
-data(slackToken, "label5", 4);
+// function returns correct description for graph
+function getDescription() {
+    if (paidPlan) {
+        return "Usage in all messages"
+    } else {
+        return "Usage in last 10k messages"
+    }
+};
+
+// function returns correct bar type
+function getBarType() {
+    if (horizontalBar) {
+        return "horizontalBar"
+    } else {
+        return "bar"
+    }
+};
+
+// data(label, index);
+// label is equal to the word you want to track
+// you can add more data
+data("query1", 0);
+data("query2", 1);
+data("query3", 2);
 
 // global graph settings
 Chart.defaults.global.responsive = true; // responsive chart
@@ -38,9 +57,9 @@ Chart.defaults.bar.scaleBeginAtZero = true; // graph starts from zero
 var bar = document.getElementById("counter").getContext("2d");
 
 var counterData = {
-    labels: [], // values from the calls "data(token, query, index)", line 25 - 29
+    labels: [], // values from the "data(query, index)" calls
     datasets: [{
-        label: "Used in last 10k messages",
+        label: getDescription(),
         fillColor: "#E05038",
         data: [] // value from API
     }]
@@ -48,7 +67,7 @@ var counterData = {
 
 // graph config
 var config = {
-    type: 'horizontalBar',
+    type: getBarType(),
     data: counterData
 };
 
