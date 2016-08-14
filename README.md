@@ -8,6 +8,5 @@ Made with JavaScript, Chart.js and the Slack API.
 ## How to use
 
 1. Fill in the "slackToken" variable and edit settings
-2. Edit the labels in the calls of `data(label, index)`
-3. **Optional:** Add more calls of `data(label, index)`
-4. **Optional:** Edit the global graph settings
+2. Add your own labels in the "labels" array
+3. **Optional:** Edit the global graph settings
