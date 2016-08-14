@@ -31,11 +31,11 @@ function data(query, index) {
 
 // function will run through all labels and make data() function calls
 function callData(array) {
-  var i = 0;
-  while (i < array.length) {
-    data(array[i], i);
-    i++;
-  }
+    var i = 0;
+    while (i < array.length) {
+        data(array[i], i);
+        i++;
+    }
 };
 
 // function returns correct description for graph
