@@ -1,83 +1,89 @@
-// Slack Word Statistics -- Settings
-var slackToken = ""; // add token as string for own use
-var paidPlan = true; // set to true if your team pays for Slack
-var horizontalBar = true; // set to false if you want vertical bars
-var labels = ["example1", "example2"]; // labels used by Slack Word Statistics
+// Slack Statistics
+// Settings
+var slackToken = "PASTE SLACK TOKEN HERE";
 
-// Chart.js Graphs -- Settings
-Chart.defaults.global.responsive = true; // responsive chart
-Chart.defaults.global.defaultFontColor = '#E05038'; // font colour
-Chart.defaults.global.maintainAspectRatio = true; // maintains aspect ratio
-Chart.defaults.bar.scaleBeginAtZero = true; // graph starts from zero
+// Queries
+var todayQuery = "on:today";
+var yesterdayQuery = "on:yesterday";
 
-function data(query, index) {
+// Pre-defined Variables
+var users = new Array(10);
+var teamName, todayCount, yesterdayCount, diffPercentage;
+
+// Data Function
+function data(query, type, proc) {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://slack.com/api/search.messages?token=" + slackToken + "&query=" + query + "&pretty=1", true); // make GET request
+    switch (type) {
+        case "search":
+            xhr.open("GET", "https://slack.com/api/search.messages?token=" + slackToken + "&query=" + query, true); // make GET request
+            break;
+        case "users":
+            xhr.open("GET", "https://slack.com/api/users.list?token=" + slackToken, true);
+            break;
+        case "info":
+            xhr.open("GET", "https://slack.com/api/team.info?token=" + slackToken, true);
+            break;
+        default:
+            return "Error: no match";
+    };
+
     xhr.send();
+    xhr.addEventListener("readystatechange", processRequest, false); // when state change -> do processRequest
 
-    // when state change -> do processRequest
-    xhr.addEventListener("readystatechange", processRequest, false);
-
-    // checks if readyState equals 4 and status equals 200, search online for more info
     function processRequest(e) {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var response = JSON.parse(xhr.responseText); // parse response
-            config.data.datasets[0].data[index] = response.messages.total; // set data in graph array to API data
-            config.data.labels[index] = query; // add label in graph array, corresponding to data
-            dataChart.update(); // update the graph
-        }
+            switch (proc) {
+                case "teamName":
+                    teamName = response.team.name;
+                    break;
+                case "todayCount":
+                    todayCount = response.messages.total;
+                    break;
+                case "yesterdayCount":
+                    yesterdayCount = response.messages.total;
+                    break;
+                case "userList":
+                    if (response.members[index].is_bot || response.members[index].profile.real_name != "slackbot") {
+                        userList.push(response.members[index].profile.real_name);
+                        userMessages.push("from:" + response.members[index].name);
+                    } else {
+                        return undefined;
+                    };
+                    break;
+                default:
+                    return "Error: no match";
+            };
+        };
     };
 };
 
-// function will run through all labels and make data() function calls
-function callData(array) {
-    var i = 0;
-    while (i < array.length) {
-        data(array[i], i);
-        i++;
-    }
+function percentage() {
+    var difference = todayCount - yesterdayCount;
+    var percentage = Math.round(difference / Number(yesterdayCount) * 100);
+    diffPercentage = percentage;
 };
 
-// function returns correct description for graph
-function getDescription() {
-    if (paidPlan) {
-        return "Usage in all messages"
+// TODO: Remove setTimeout, make use of promises instead
+// setTimeout is very unreliable (time to wait for API to finish isn't constant)!
+
+function getData() {
+    data(null, "info", "teamName");
+    data(todayQuery, "search", "todayCount");
+    data(yesterdayQuery, "search", "yesterdayCount");
+    setTimeout(percentage, 1000); // REMOVE SETTIMEOUT
+};
+
+function postToHTML() {
+    document.getElementById("title").innerHTML = 'Slack Statistics for "' + teamName + '"';
+    document.getElementById("todayCounter").innerHTML = todayCount;
+    document.getElementById("yesterdayCounter").innerHTML = yesterdayCount;
+    if (diffPercentage >= 0) {
+        document.getElementById("compare").innerHTML = "That's ~" + diffPercentage + "% messages more than yesterday!";
     } else {
-        return "Usage in last 10k messages"
-    }
+        document.getElementById("compare").innerHTML = "That's ~" + Math.abs(diffPercentage) + "% messages less than yesterday!";
+    };
 };
 
-// function returns correct bar type
-function getBarType() {
-    if (horizontalBar) {
-        return "horizontalBar"
-    } else {
-        return "bar"
-    }
-};
-
-// get element with id = "counter"
-var bar = document.getElementById("counter").getContext("2d");
-var counterData = {
-    labels: [], // values from the labels array
-    datasets: [{
-        label: getDescription(),
-        fillColor: "#E05038",
-        data: [] // value from API
-    }]
-};
-
-// graph config -- see global settings
-var config = {
-    type: getBarType(),
-    data: counterData
-};
-
-// make function call with "labels" array as parameter
-callData(labels);
-
-// define our graph
-var dataChart = new Chart(bar, config);
-
-// update the graph
-dataChart.update();
+getData();
+setTimeout(postToHTML, 1000); // REMOVE SETTIMEOUT

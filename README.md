@@ -1,12 +1,9 @@
-# slack-wordstats
+# slack-statistics
 
-Graphing the use of specific words in your Slack team.<br>
-Made with JavaScript, Chart.js and the Slack API.
-
-![alt text](http://i.imgur.com/NdA6rkB.png)
+Displaying the number of messages posted in your Slack team.<br>
+Made with JavaScript and the Slack API.
 
 ## How to use
 
-1. Fill in the "slackToken" variable and edit settings
-2. Add your own labels in the "labels" array
-3. **Optional:** Edit the global graph settings
+1. Fill in the "slackToken" variable with your own Slack token (as string).
+2. Open index.html in your browser

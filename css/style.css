@@ -1,8 +1,32 @@
-#title {
-    padding-left: 0.5em;
+#description, #compare {
+    padding-left: 2.2em;
     font-family: 'Montserrat', sans-serif;
-    font-size: 4em;
-    color: #E05038;
+    font-size: 1em;
+    color: #424242;
+}
+
+#messageCounterContainer{
+    float: left;
+}
+#todayCounter, #mostTalkativeUser {
+    padding-left: 0.7em;
+    margin-top: -0.4em;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 3em;
+    color: #424242;
+}
+#yesterdayCounter {
+    padding-left: 0.7em;
+    margin-top: -0.4em;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 3em;
+    color: #424242;
+}
+#title {
+    padding-left: 0.6em;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 3.5em;
+    color: #424242;
 }
 body {
     background: #FEFCFB;

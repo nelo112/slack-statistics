@@ -4,23 +4,37 @@
 <head>
     <!-- Meta Data -->
     <meta charset="utf-8">
-    <meta name="description" content="Slack Word Statistics">
-    <meta name="author" content="Patrick Van der Spiegel">
+    <meta name="description" content="Slack Statistics">
 
     <!-- Fonts & CSS -->
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:700|Lato">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:700">
     <link rel="stylesheet" type="text/css" href="css/style.css">
 
-    <!-- JavaScript Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.min.js"></script>
-
     <!-- Page Title -->
-    <title>slack-wordstats</title>
+    <title>Slack Statistics</title>
 </head>
 
 <body>
-    <h1 id="title">Slack Word Statistics</h1>
-    <canvas id="counter" />
+    <h1 id="title">Slack Statistics for</h1>
+    <div id="stats">
+        <div id="messageCounterContainers">
+            <div id="messageTodayCounterContainer">
+                <h2 id="description">Number of messages sent today:</h2>
+                <h1 id="todayCounter" class="data"></h1>
+            </div>
+            <div id="messageYesterdayCounterContainer">
+                <h2 id="description">Number of messages sent yesterday:</h2>
+                <h1 id="yesterdayCounter" class="data"></h1>
+            </div>
+            <div>
+                <h2 id="compare">That's .. messages .. than yesterday!</h2>
+            </div>
+            <div id="mostTalkativeUserContainer">
+                <h2 id="description">Most talkative user today:</h2>
+                <h1 id="mostTalkativeUser" class="data"></h1>
+            </div>
+        </div>
+    </div>
     <script src="js/stats.js"></script>
 </body>
 
