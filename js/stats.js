@@ -12,50 +12,67 @@ var teamName, todayCount, yesterdayCount, diffPercentage;
 
 // Data Function
 function data(query, type, proc) {
-    var xhr = new XMLHttpRequest();
-    switch (type) {
-        case "search":
-            xhr.open("GET", "https://slack.com/api/search.messages?token=" + slackToken + "&query=" + query, true); // make GET request
-            break;
-        case "users":
-            xhr.open("GET", "https://slack.com/api/users.list?token=" + slackToken, true);
-            break;
-        case "info":
-            xhr.open("GET", "https://slack.com/api/team.info?token=" + slackToken, true);
-            break;
-        default:
-            return "Error: no match";
-    };
-
-    xhr.send();
-    xhr.addEventListener("readystatechange", processRequest, false); // when state change -> do processRequest
-
-    function processRequest(e) {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var response = JSON.parse(xhr.responseText); // parse response
-            switch (proc) {
-                case "teamName":
-                    teamName = response.team.name;
-                    break;
-                case "todayCount":
-                    todayCount = response.messages.total;
-                    break;
-                case "yesterdayCount":
-                    yesterdayCount = response.messages.total;
-                    break;
-                case "userList":
-                    if (response.members[index].is_bot || response.members[index].profile.real_name != "slackbot") {
-                        userList.push(response.members[index].profile.real_name);
-                        userMessages.push("from:" + response.members[index].name);
-                    } else {
-                        return undefined;
-                    };
-                    break;
-                default:
-                    return "Error: no match";
-            };
+    return new Promise(function(resolve, reject) { // Returning a promise!
+        var xhr = new XMLHttpRequest();
+        switch (type) {
+            case "search":
+                xhr.open("GET", "https://slack.com/api/search.messages?token=" + slackToken + "&query=" + query, true); // make GET request
+                break;
+            case "users":
+                xhr.open("GET", "https://slack.com/api/users.list?token=" + slackToken, true);
+                break;
+            case "info":
+                xhr.open("GET", "https://slack.com/api/team.info?token=" + slackToken, true);
+                break;
+            default:
+                reject({ok: false, error: "Invalid request"})
         };
-    };
+
+        xhr.send();
+        /*
+        * Changed to a load listener in order to not have to check for ready state
+        */
+        xhr.addEventListener("load", processRequest, false); // when state change -> do processRequest
+
+        function processRequest(e) {
+            // No need to check readyState now
+            if (xhr.status == 200) {
+                var response = JSON.parse(xhr.responseText); // parse response
+                if (!response.ok) {
+                    reject(response); //Slack returns its error message with a 200 code
+                    return;
+                }
+                switch (proc) {
+                    case "teamName":
+                        teamName = response.team.name;
+                        resolve(); //Resolve promise
+                        break;
+                    case "todayCount":
+                        todayCount = response.messages.total;
+                        resolve(); //Resolve promise
+                        break;
+                    case "yesterdayCount":
+                        yesterdayCount = response.messages.total;
+                        resolve(); //Resolve promise
+                        break;
+                    case "userList":
+                        if (response.members[index].is_bot || response.members[index].profile.real_name != "slackbot") {
+                            userList.push(response.members[index].profile.real_name);
+                            userMessages.push("from:" + response.members[index].name);
+                            resolve(); //Resolve promise
+                        } else {
+                            resolve(); //Resolve promise
+                            return undefined;
+                        };
+                        break;
+                    default:
+                        reject({ok: false, error: "Invalid request"}); // Error on request and reject promise
+                };
+            } else {
+                reject({ok: false, error: "Invalid response", code: xhr.status}); //Error on response type and reject promise
+            }
+        };
+    });
 };
 
 function percentage() {
@@ -68,10 +85,13 @@ function percentage() {
 // setTimeout is very unreliable (time to wait for API to finish isn't constant)!
 
 function getData() {
-    data(null, "info", "teamName");
-    data(todayQuery, "search", "todayCount");
-    data(yesterdayQuery, "search", "yesterdayCount");
-    setTimeout(percentage, 1000); // REMOVE SETTIMEOUT
+    // Chain all the requests and console.log caught errors
+    data(null, "info", "teamName")
+    .then( () => data(todayQuery, "search", "todayCount") )
+    .then( () => data(yesterdayQuery, "search", "yesterdayCount") )
+    .then( () => percentage() )
+    .then( () => postToHTML() )
+    .catch( error => console.log(error) )
 };
 
 function postToHTML() {
@@ -86,4 +106,4 @@ function postToHTML() {
 };
 
 getData();
-setTimeout(postToHTML, 1000); // REMOVE SETTIMEOUT
+// All promises are now resolved in the getData function
