@@ -7,11 +7,27 @@ var todayQuery = "on:today";
 var yesterdayQuery = "on:yesterday";
 
 // Pre-defined Variables
-var users = new Array(10);
-var teamName, todayCount, yesterdayCount, diffPercentage;
+var userName = [],
+    userMessage = [],
+    userMessageCount = [],
+    userMostTalkative = []; // ..[0] = username; ..[1] = # of messages
+
+var userCount, teamName, todayCount, yesterdayCount, diffPercentage;
+
+// Help Functions
+function getMaxOfArray(numArray) {
+    return Math.max.apply(null, numArray);
+}
+
+function getIndexOfMax(numArray) {
+    return numArray.indexOf(getMaxOfArray(numArray));
+}
 
 // Data Function
-function data(query, type, proc) {
+function data(query, type, proc, index) {
+    if (typeof index === 'undefined') {
+        index = null;
+    };
     return new Promise(function(resolve, reject) { // Returning a promise!
         var xhr = new XMLHttpRequest();
         switch (type) {
@@ -25,13 +41,16 @@ function data(query, type, proc) {
                 xhr.open("GET", "https://slack.com/api/team.info?token=" + slackToken, true);
                 break;
             default:
-                reject({ok: false, error: "Invalid request"})
+                reject({
+                    ok: false,
+                    error: "Invalid request"
+                })
         };
 
         xhr.send();
         /*
-        * Changed to a load listener in order to not have to check for ready state
-        */
+         * Changed to a load listener in order to not have to check for ready state
+         */
         xhr.addEventListener("load", processRequest, false); // when state change -> do processRequest
 
         function processRequest(e) {
@@ -55,54 +74,86 @@ function data(query, type, proc) {
                         yesterdayCount = response.messages.total;
                         resolve(); //Resolve promise
                         break;
+                    case "userCount":
+                        userCount = Object.keys(response.members).length - 1;
+                        resolve(); //Resolve promise
+                        break;
+                    case "userMessageCount":
+                        userMessageCount[index] = response.messages.total;
+                        resolve(); //Resolve promise
+                        break;
                     case "userList":
-                        if (response.members[index].is_bot || response.members[index].profile.real_name != "slackbot") {
-                            userList.push(response.members[index].profile.real_name);
-                            userMessages.push("from:" + response.members[index].name);
-                            resolve(); //Resolve promise
-                        } else {
-                            resolve(); //Resolve promise
-                            return undefined;
+                        for (i = 0; i < userCount; i++) {
+                            if (response.members[i].is_bot != true || response.members[i].profile.real_name != "slackbot") {
+                                userName.push(response.members[i].profile.real_name); // Push real names to userName array
+                                userMessage.push("from:" + response.members[i].name); // Push "from:username" to userMessage array
+                                data(todayQuery + "+" + "from:" + response.members[i].name, "search", "userMessageCount", i); // Get number of messages
+                            } else {
+                                return undefined;
+                            };
                         };
+                        resolve(); //Resolve promise
                         break;
                     default:
-                        reject({ok: false, error: "Invalid request"}); // Error on request and reject promise
+                        reject({
+                            ok: false,
+                            error: "Invalid request"
+                        }); // Error on request and reject promise
                 };
             } else {
-                reject({ok: false, error: "Invalid response", code: xhr.status}); //Error on response type and reject promise
+                reject({
+                    ok: false,
+                    error: "Invalid response",
+                    code: xhr.status
+                }); //Error on response type and reject promise
             }
         };
     });
 };
 
-function percentage() {
-    var difference = todayCount - yesterdayCount;
-    var percentage = Math.round(difference / Number(yesterdayCount) * 100);
-    diffPercentage = percentage;
+function getPercentage() {
+    return new Promise(function(resolve, reject) {
+        var difference = todayCount - yesterdayCount;
+        var percentage = Math.round(difference / Number(yesterdayCount) * 100);
+        diffPercentage = percentage;
+        resolve();
+    })
 };
 
-// TODO: Remove setTimeout, make use of promises instead
-// setTimeout is very unreliable (time to wait for API to finish isn't constant)!
+
+function getTalkativeUser() {
+    return new Promise(function(resolve, reject) {
+        userMostTalkative[0] = userName[getIndexOfMax(userMessageCount)];
+        userMostTalkative[1] = getMaxOfArray(userMessageCount);
+        resolve();
+    })
+};
 
 function getData() {
     // Chain all the requests and console.log caught errors
     data(null, "info", "teamName")
-    .then( () => data(todayQuery, "search", "todayCount") )
-    .then( () => data(yesterdayQuery, "search", "yesterdayCount") )
-    .then( () => percentage() )
-    .then( () => postToHTML() )
-    .catch( error => console.log(error) )
+        .then(() => data(todayQuery, "search", "todayCount"))
+        .then(() => data(yesterdayQuery, "search", "yesterdayCount"))
+        .then(() => data(null, "users", "userCount"))
+        .then(() => data(null, "users", "userList"))
+        .then(() => getPercentage())
+        .then(() => getTalkativeUser())
+        .then(() => postToHTML())
+        .catch(error => console.log(error))
 };
 
 function postToHTML() {
     document.getElementById("title").innerHTML = 'Slack Statistics for "' + teamName + '"';
     document.getElementById("todayCounter").innerHTML = todayCount;
     document.getElementById("yesterdayCounter").innerHTML = yesterdayCount;
+
     if (diffPercentage >= 0) {
         document.getElementById("compare").innerHTML = "That's ~" + diffPercentage + "% messages more than yesterday!";
     } else {
         document.getElementById("compare").innerHTML = "That's ~" + Math.abs(diffPercentage) + "% messages less than yesterday!";
     };
+
+    document.getElementById("mostTalkativeUser").innerHTML = userMostTalkative[0] + " with " + userMostTalkative[1] + " messages";
 };
 
 getData();
