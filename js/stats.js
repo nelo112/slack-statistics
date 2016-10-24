@@ -124,11 +124,11 @@ function getPercentage() {
 
 function getTalkativeUser() {
     return new Promise(function(resolve, reject) {
-		Promise.all(userMessageCountPromise).then(() => {
+        Promise.all(userMessageCountPromise).then(() => {
             userMostTalkative[0] = userName[getIndexOfMax(userMessageCount)];
             userMostTalkative[1] = getMaxOfArray(userMessageCount);
             resolve();
-		});
+        });
     })
 };
 
