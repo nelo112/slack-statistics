@@ -88,7 +88,7 @@ function data(query, type, proc, index) {
                             if (response.members[i].is_bot != true || response.members[i].profile.real_name != "slackbot") {
                                 userName.push(response.members[i].profile.real_name); // Push real names to userName array
                                 userMessage.push("from:" + response.members[i].name); // Push "from:username" to userMessage array
-								userMessageCountPromise.push(data(todayQuery + "+" + "from:" + response.members[i].name, "search", "userMessageCount", i)); // Get number of messages
+                                userMessageCountPromise.push(data(todayQuery + "+" + "from:" + response.members[i].name, "search", "userMessageCount", i)); // Get number of messages
                             } else {
                                 return undefined;
                             };
