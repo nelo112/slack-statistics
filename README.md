@@ -7,3 +7,5 @@ Made with JavaScript and the Slack API.
 
 1. Fill in the "slackToken" variable with your own Slack token (as string).
 2. Open index.html in your browser
+
+![screenshot](http://i.imgur.com/4WtRU8w.png)
